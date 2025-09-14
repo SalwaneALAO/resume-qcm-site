@@ -1,0 +1,283 @@
+<!doctype html>
+<html lang="fr">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Résumé & QCM — Dépôt de document</title>
+  <style>
+    :root{
+      --bg:#ffffff;--card:#f9fafb;--acc:#2563eb;--muted:#6b7280;--ok:#16a34a;--warn:#f59e0b;--err:#dc2626;--txt:#111827;
+    }
+    [data-theme="dark"]{
+      --bg:#0b0c10;--card:#151821;--acc:#4aa3ff;--muted:#aab3c0;--ok:#21c55d;--warn:#f59e0b;--err:#ef4444;--txt:#e5e7eb;
+    }
+    *{box-sizing:border-box}
+    body{margin:0;font-family:system-ui,-apple-system,Segoe UI,Roboto,Ubuntu,Helvetica,Arial,sans-serif;background:var(--bg);color:var(--txt);transition:background .3s,color .3s}
+    header{position:sticky;top:0;background:var(--bg);border-bottom:1px solid #d1d5db;z-index:10;transition:background .3s}
+    .inner{max-width:1000px;margin:0 auto;padding:18px 16px}
+    nav{display:flex;align-items:center;gap:10px;justify-content:space-between}
+    .brand{display:flex;align-items:center;gap:10px}
+    .logo{width:36px;height:36px;border-radius:12px;background:conic-gradient(from 220deg,#2563eb,#60a5fa);}
+    .title{font-weight:700;letter-spacing:.2px}
+    .tabs{display:flex;gap:8px;flex-wrap:wrap}
+    .tab{padding:10px 14px;border:1px solid #cbd5e1;border-radius:12px;background:#f3f4f6;cursor:pointer;color:var(--txt)}
+    .tab[aria-selected="true"]{background:var(--acc);border-color:var(--acc);color:#fff}
+    main{padding:24px 16px}
+    .grid{max-width:1000px;margin:0 auto;display:grid;grid-template-columns:1fr;gap:18px}
+    .card{background:var(--card);border:1px solid #e5e7eb;border-radius:16px;padding:18px;transition:background .3s}
+    .card h2{margin:0 0 8px;font-size:20px}
+    .muted{color:var(--muted);font-size:14px}
+    label{display:block;margin:12px 0 6px}
+    input[type="email"], input[type="text"], input[type="file"], input[type="number"], button, .btn{width:100%;padding:12px 14px;border-radius:12px;border:1px solid #d1d5db;background:#fff;color:var(--txt)}
+    [data-theme="dark"] input, [data-theme="dark"] button{background:#0f1320;color:#e5e7eb;border-color:#2a3447}
+    input[type="file"]{padding:10px}
+    .row{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+    button,.btn{cursor:pointer}
+    .primary{background:var(--acc);border-color:var(--acc);color:#fff}
+    .ghost{background:transparent;border-color:#cbd5e1}
+    .ok{color:var(--ok)}
+    .warn{color:var(--warn)}
+    .err{color:var(--err)}
+    .progress{height:8px;background:#e5e7eb;border-radius:999px;overflow:hidden}
+    .bar{height:8px;width:0;background:linear-gradient(90deg,#2563eb,#60a5fa);transition:width .25s}
+    .list{display:grid;gap:10px;margin-top:8px}
+    .item{border:1px solid #d1d5db;border-radius:12px;padding:12px;background:#f9fafb}
+    [data-theme="dark"] .item{background:#0f1320;border-color:#263042}
+    .item h3{margin:0 0 6px;font-size:16px}
+    .pill{display:inline-flex;align-items:center;gap:6px;border:1px solid #cbd5e1;border-radius:999px;padding:6px 10px;font-size:12px;color:var(--txt)}
+    footer{padding:40px 16px;border-top:1px solid #e5e7eb;color:var(--muted)}
+    .small{font-size:12px}
+    .hidden{display:none}
+    .success{border-color:#114a2f;background:#ecfdf5}
+    .center{display:flex;align-items:center;justify-content:center}
+    .code{font-family:ui-monospace,SFMono-Regular,Menlo,Monaco,Consolas,monospace;font-size:12px;color:var(--txt);background:#f3f4f6;border:1px solid #d1d5db;border-radius:10px;padding:10px}
+    [data-theme="dark"] .code{background:#0c111b;border-color:#223048;color:#cbd5e1}
+    .theme-toggle{cursor:pointer;padding:8px 12px;border-radius:8px;border:1px solid #cbd5e1;background:#f3f4f6;color:var(--txt)}
+    [data-theme="dark"] .theme-toggle{background:#1f2937;border-color:#374151;color:#f3f4f6}
+    @media (max-width:760px){.row{grid-template-columns:1fr}}
+  </style>
+</head>
+<body>
+  <header>
+    <div class="inner">
+      <nav>
+        <div class="brand"><div class="logo" aria-hidden="true"></div><div>
+          <div class="title">Résumé & QCM</div>
+          <div class="small muted">Dépose ton doc • Reçois un résumé propre</div>
+        </div></div>
+        <div style="display:flex;gap:10px;align-items:center">
+          <div class="tabs" role="tablist">
+            <button class="tab" role="tab" id="tab-upload" aria-selected="true" aria-controls="panel-upload">Uploader un document</button>
+            <button class="tab" role="tab" id="tab-view" aria-selected="false" aria-controls="panel-view">Voir votre résumé & QCM</button>
+            <button class="tab" role="tab" id="tab-help" aria-selected="false" aria-controls="panel-help">Comment ça marche</button>
+            <button class="tab" role="tab" id="tab-privacy" aria-selected="false" aria-controls="panel-privacy">Confidentialité</button>
+          </div>
+          <button id="themeToggle" class="theme-toggle">🌙</button>
+        </div>
+      </nav>
+    </div>
+  </header>
+
+  <main>
+    <div class="grid">
+      <!-- Panels (inchangés, mêmes que version précédente) -->
+      <section id="panel-upload" class="card" role="tabpanel" aria-labelledby="tab-upload">
+        <h2>Uploader un document</h2>
+        <p class="muted">PDF, DOCX, DOC ou TXT • Taille max par défaut 20 Mo</p>
+        <div class="row">
+          <div>
+            <label for="email">Votre email (pour recevoir le lien)</label>
+            <input id="email" type="email" placeholder="prenom.nom@email.com" required />
+          </div>
+          <div>
+            <label for="subject">Matière / Chapitre (optionnel)</label>
+            <input id="subject" type="text" placeholder="Ex.: Thermodynamique — Chap 3" />
+          </div>
+        </div>
+        <label for="file">Choisir un fichier</label>
+        <input id="file" type="file" accept=".pdf,.doc,.docx,.txt" required />
+        <div class="row">
+          <button id="btnUpload" class="primary">Envoyer & Générer le résumé</button>
+          <button id="btnReset" class="ghost">Réinitialiser</button>
+        </div>
+        <div id="uploadStatus" class="muted" style="margin-top:10px"></div>
+        <div class="progress" aria-hidden="true"><div id="progressBar" class="bar"></div></div>
+        <div id="uploadResult" class="item success hidden" style="margin-top:12px"></div>
+      </section>
+
+      <section id="panel-view" class="card hidden" role="tabpanel" aria-labelledby="tab-view">
+        <h2>Voir votre résumé & QCM</h2>
+        <p class="muted">Entrez votre email (et code si activé) pour retrouver vos documents.</p>
+        <div class="row">
+          <div>
+            <label for="emailLookup">Email</label>
+            <input id="emailLookup" type="email" placeholder="prenom.nom@email.com" />
+          </div>
+          <div id="otpWrap" class="hidden">
+            <label for="otp">Code (OTP)</label>
+            <input id="otp" type="text" placeholder="6 chiffres" inputmode="numeric" maxlength="6" />
+          </div>
+        </div>
+        <div class="row">
+          <button id="btnLookup" class="primary">Rechercher</button>
+          <button id="btnSendOtp" class="ghost hidden">M’envoyer un code</button>
+        </div>
+        <div id="lookupStatus" class="muted" style="margin-top:10px"></div>
+        <div id="results" class="list"></div>
+      </section>
+
+      <section id="panel-help" class="card hidden" role="tabpanel" aria-labelledby="tab-help">
+        <h2>Comment ça marche</h2>
+        <ol>
+          <li>Vous uploadez un document (PDF, DOCX/DOC, TXT).</li>
+          <li>Notre robot envoie le texte à un moteur IA avec ce prompt : <em>10 points essentiels, 5 QCM, 5 définitions, 5 pièges</em>.</li>
+          <li>On génère un Google Doc propre, et on vous envoie le lien par email.</li>
+          <li>La page <strong>Voir votre résumé & QCM</strong> permet de retrouver l’historique.</li>
+        </ol>
+        <p class="muted">Astuce : gardez le même email pour lier tous vos dépôts.</p>
+      </section>
+
+      <section id="panel-privacy" class="card hidden" role="tabpanel" aria-labelledby="tab-privacy">
+        <h2>Confidentialité & suppression</h2>
+        <p>Nous conservons uniquement ce qui est nécessaire : email, métadonnées du fichier, liens de sortie. Vous pouvez demander la suppression totale de vos données.</p>
+        <div class="row">
+          <input id="emailErase" type="email" placeholder="Votre email pour supprimer les données" />
+          <button id="btnErase" class="tab">Demander la suppression</button>
+        </div>
+        <div id="eraseStatus" class="muted" style="margin-top:10px"></div>
+      </section>
+    </div>
+  </main>
+
+  <footer>
+    <div class="inner small">
+      Fait pour les étudiants pressés. ⚡️
+    </div>
+  </footer>
+
+  <script>
+  // ======= THEME TOGGLE =======
+  const themeToggle = document.getElementById('themeToggle');
+  function setTheme(mode){
+    document.body.setAttribute('data-theme', mode);
+    localStorage.setItem('theme', mode);
+    themeToggle.textContent = mode==='dark' ? '☀️' : '🌙';
+  }
+  themeToggle.addEventListener('click', ()=>{
+    const current = document.body.getAttribute('data-theme')||'light';
+    setTheme(current==='light' ? 'dark':'light');
+  });
+  setTheme(localStorage.getItem('theme')||'light');
+
+  // ======= NAV TABS (fix) =======
+  const TAB_IDS = ['upload','view','help','privacy'];
+  function switchTab(t){
+    TAB_IDS.forEach(x=>{
+      const panel = document.getElementById(`panel-${x}`);
+      const tabBtn = document.getElementById(`tab-${x}`);
+      if(panel){ panel.classList.toggle('hidden', x!==t); }
+      if(tabBtn){ tabBtn.setAttribute('aria-selected', x===t ? 'true':'false'); }
+    });
+    // Pré-remplir email sur l'onglet "Voir"
+    if(t==='view'){
+      const emailLookup = document.getElementById('emailLookup');
+      if(emailLookup){ emailLookup.value = localStorage.getItem('email') || ''; }
+    }
+    // Focus premier champ
+    const firstFocusable = document.querySelector(`#panel-${t} input, #panel-${t} button`);
+    if(firstFocusable){ firstFocusable.focus({preventScroll:true}); }
+  }
+  // Attacher les handlers
+  TAB_IDS.forEach(t=>{
+    const btn = document.getElementById(`tab-${t}`);
+    if(btn){ btn.addEventListener('click', ()=> switchTab(t)); }
+  });
+  // Navigation clavier (accessibilité)
+  document.querySelector('.tabs')?.addEventListener('keydown', (e)=>{
+    const idx = TAB_IDS.findIndex(id => document.getElementById(`tab-${id}`) === document.activeElement);
+    if(idx===-1) return;
+    if(e.key==='ArrowRight'){ e.preventDefault(); const n=(idx+1)%TAB_IDS.length; document.getElementById(`tab-${TAB_IDS[n]}`).focus(); }
+    if(e.key==='ArrowLeft'){ e.preventDefault(); const p=(idx-1+TAB_IDS.length)%TAB_IDS.length; document.getElementById(`tab-${TAB_IDS[p]}`).focus(); }
+    if(e.key==='Enter' || e.key===' '){ e.preventDefault(); const id = TAB_IDS[idx]; switchTab(id); }
+  });
+  // État initial
+  switchTab('upload');
+  // === CONFIG ===
+const UPLOAD_URL = "https://n8n.srv1009037.hstgr.cloud/webhook-test/depots-site"; // ← mettra /webhook/depots-site en prod
+
+// === Références DOM ===
+const emailEl   = document.getElementById('email');
+const subjectEl = document.getElementById('subject');
+const fileEl    = document.getElementById('file');
+const btnUpload = document.getElementById('btnUpload');
+const btnReset  = document.getElementById('btnReset');
+const upStatus  = document.getElementById('uploadStatus');
+const upResult  = document.getElementById('uploadResult');
+const bar       = document.getElementById('progressBar');
+
+// Helpers
+function setProgress(p){ bar.style.width = Math.max(0, Math.min(100, p)) + '%'; }
+function extOk(name){ return ['pdf','txt','doc','docx'].includes((name.split('.').pop()||'').toLowerCase()); }
+
+// Reset
+btnReset.addEventListener('click', ()=>{
+  emailEl.value = subjectEl.value = ""; fileEl.value = "";
+  setProgress(0); upStatus.textContent = ""; upResult.classList.add('hidden'); upResult.innerHTML = "";
+});
+
+// Upload (XHR pour vraie barre de progression)
+btnUpload.addEventListener('click', ()=>{
+  const email = (emailEl.value||'').trim();
+  const subject = (subjectEl.value||'').trim();
+  const file = fileEl.files[0];
+
+  if(!email || !file){ upStatus.textContent = "Email et fichier requis."; return; }
+  if(!extOk(file.name)){ upStatus.textContent = "Formats autorisés : PDF, DOC, DOCX, TXT."; return; }
+  if(file.size > 20*1024*1024){ upStatus.textContent = "Fichier trop lourd (max 20 Mo)."; return; }
+
+  localStorage.setItem('email', email);
+  upResult.classList.add('hidden'); upResult.innerHTML = "";
+  upStatus.textContent = "Envoi en cours…"; setProgress(5);
+
+  const form = new FormData();
+  form.append('email', email);
+  form.append('subject', subject);
+  form.append('document', file);
+
+  const xhr = new XMLHttpRequest();
+  xhr.open('POST', UPLOAD_URL, true);
+
+  xhr.upload.onprogress = (e)=>{
+    if(e.lengthComputable){
+      const p = Math.round((e.loaded/e.total)*70); // 0→70% pour l’upload
+      setProgress(p);
+    }
+  };
+
+  xhr.onreadystatechange = ()=>{
+    if(xhr.readyState === 4){
+      let data = {};
+      try { data = JSON.parse(xhr.responseText || "{}"); } catch(_) {}
+      if(xhr.status>=200 && xhr.status<300){
+        setProgress(100);
+        upStatus.textContent = "Demande envoyée. Veillez votre email.";
+        upResult.innerHTML = `
+          <div class="ok">✅ Reçu par n8n.</div>
+          ${data.job_id ? `<div class="muted">Job ID: <code>${data.job_id}</code></div>`:''}
+          ${data.docUrl ? `<div>Lien: <a target="_blank" href="${data.docUrl}">${data.docUrl}</a></div>`:''}
+        `;
+        upResult.classList.remove('hidden');
+      }else{
+        upStatus.innerHTML = `<span class="err">${data.message || 'Erreur côté serveur.'}</span>`;
+        setProgress(0);
+      }
+    }
+  };
+
+  xhr.onerror = ()=>{ upStatus.innerHTML = `<span class="err">Erreur réseau.</span>`; setProgress(0); };
+  xhr.send(form);
+});
+
+</script>
+</body>
+</html>
