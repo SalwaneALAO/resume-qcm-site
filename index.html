@@ -80,6 +80,7 @@
 
   <main>
     <div class="grid">
+      <!-- Panels (inchangés, mêmes que version précédente) -->
       <section id="panel-upload" class="card" role="tabpanel" aria-labelledby="tab-upload">
         <h2>Uploader un document</h2>
         <p class="muted">PDF, DOCX, DOC ou TXT • Taille max par défaut 20 Mo</p>
@@ -168,7 +169,7 @@
   });
   setTheme(localStorage.getItem('theme')||'light');
 
-  // ======= NAV TABS =======
+  // ======= NAV TABS (fix) =======
   const TAB_IDS = ['upload','view','help','privacy'];
   function switchTab(t){
     TAB_IDS.forEach(x=>{
@@ -177,17 +178,21 @@
       if(panel){ panel.classList.toggle('hidden', x!==t); }
       if(tabBtn){ tabBtn.setAttribute('aria-selected', x===t ? 'true':'false'); }
     });
+    // Pré-remplir email sur l'onglet "Voir"
     if(t==='view'){
       const emailLookup = document.getElementById('emailLookup');
       if(emailLookup){ emailLookup.value = localStorage.getItem('email') || ''; }
     }
+    // Focus premier champ
     const firstFocusable = document.querySelector(`#panel-${t} input, #panel-${t} button`);
     if(firstFocusable){ firstFocusable.focus({preventScroll:true}); }
   }
+  // Attacher les handlers
   TAB_IDS.forEach(t=>{
     const btn = document.getElementById(`tab-${t}`);
     if(btn){ btn.addEventListener('click', ()=> switchTab(t)); }
   });
+  // Navigation clavier (accessibilité)
   document.querySelector('.tabs')?.addEventListener('keydown', (e)=>{
     const idx = TAB_IDS.findIndex(id => document.getElementById(`tab-${id}`) === document.activeElement);
     if(idx===-1) return;
@@ -195,107 +200,84 @@
     if(e.key==='ArrowLeft'){ e.preventDefault(); const p=(idx-1+TAB_IDS.length)%TAB_IDS.length; document.getElementById(`tab-${TAB_IDS[p]}`).focus(); }
     if(e.key==='Enter' || e.key===' '){ e.preventDefault(); const id = TAB_IDS[idx]; switchTab(id); }
   });
+  // État initial
   switchTab('upload');
+  // === CONFIG ===
+const UPLOAD_URL = "https://n8n.srv1009037.hstgr.cloud/webhook-test/depots-site"; // ← mettra /webhook/depots-site en prod
 
-  // === CONFIG N8N (auto test/prod) ===
-  // Avec ?mode=test dans l’URL de ta page, on bascule sur /webhook-test/depots-site.
-  const MODE_QUERY = new URLSearchParams(location.search).get('mode');
-  const USE_TEST = MODE_QUERY === 'test';
-  const N8N_BASE = "https://n8n.srv1009037.hstgr.cloud";
-  const UPLOAD_URL = USE_TEST
-    ? `${N8N_BASE}/webhook-test/depots-site`
-    : `${N8N_BASE}/webhook/depots-site`;
+// === Références DOM ===
+const emailEl   = document.getElementById('email');
+const subjectEl = document.getElementById('subject');
+const fileEl    = document.getElementById('file');
+const btnUpload = document.getElementById('btnUpload');
+const btnReset  = document.getElementById('btnReset');
+const upStatus  = document.getElementById('uploadStatus');
+const upResult  = document.getElementById('uploadResult');
+const bar       = document.getElementById('progressBar');
 
-  // === Références DOM ===
-  const emailEl   = document.getElementById('email');
-  const subjectEl = document.getElementById('subject');
-  const fileEl    = document.getElementById('file');
-  const btnUpload = document.getElementById('btnUpload');
-  const btnReset  = document.getElementById('btnReset');
-  const upStatus  = document.getElementById('uploadStatus');
-  const upResult  = document.getElementById('uploadResult');
-  const bar       = document.getElementById('progressBar');
+// Helpers
+function setProgress(p){ bar.style.width = Math.max(0, Math.min(100, p)) + '%'; }
+function extOk(name){ return ['pdf','txt','doc','docx'].includes((name.split('.').pop()||'').toLowerCase()); }
 
-  // Helpers
-  function setProgress(p){ bar.style.width = Math.max(0, Math.min(100, p)) + '%'; }
-  function extOk(name){ return ['pdf','txt','doc','docx'].includes((name.split('.').pop()||'').toLowerCase()); }
-  function setBusy(b){
-    btnUpload.disabled = b;
-    btnUpload.textContent = b ? "Envoi en cours…" : "Envoyer & Générer le résumé";
-  }
+// Reset
+btnReset.addEventListener('click', ()=>{
+  emailEl.value = subjectEl.value = ""; fileEl.value = "";
+  setProgress(0); upStatus.textContent = ""; upResult.classList.add('hidden'); upResult.innerHTML = "";
+});
 
-  // Reset
-  btnReset.addEventListener('click', ()=>{
-    emailEl.value = subjectEl.value = ""; fileEl.value = "";
-    setProgress(0); upStatus.textContent = ""; upResult.classList.add('hidden'); upResult.innerHTML = "";
-  });
+// Upload (XHR pour vraie barre de progression)
+btnUpload.addEventListener('click', ()=>{
+  const email = (emailEl.value||'').trim();
+  const subject = (subjectEl.value||'').trim();
+  const file = fileEl.files[0];
 
-  // Upload (XHR pour vraie barre de progression)
-  btnUpload.addEventListener('click', ()=>{
-    const email = (emailEl.value||'').trim();
-    const subject = (subjectEl.value||'').trim();
-    const file = fileEl.files[0];
+  if(!email || !file){ upStatus.textContent = "Email et fichier requis."; return; }
+  if(!extOk(file.name)){ upStatus.textContent = "Formats autorisés : PDF, DOC, DOCX, TXT."; return; }
+  if(file.size > 20*1024*1024){ upStatus.textContent = "Fichier trop lourd (max 20 Mo)."; return; }
 
-    if(!email || !file){ upStatus.innerHTML = '<span class="warn">Email et fichier requis.</span>'; return; }
-    if(!extOk(file.name)){ upStatus.innerHTML = '<span class="warn">Formats autorisés : PDF, DOC, DOCX, TXT.</span>'; return; }
-    if(file.size > 20*1024*1024){ upStatus.innerHTML = '<span class="warn">Fichier trop lourd (max 20 Mo).</span>'; return; }
+  localStorage.setItem('email', email);
+  upResult.classList.add('hidden'); upResult.innerHTML = "";
+  upStatus.textContent = "Envoi en cours…"; setProgress(5);
 
-    localStorage.setItem('email', email);
-    upResult.classList.add('hidden'); upResult.innerHTML = "";
-    upStatus.textContent = "Envoi en cours…"; setProgress(5);
-    setBusy(true);
+  const form = new FormData();
+  form.append('email', email);
+  form.append('subject', subject);
+  form.append('document', file);
 
-    const form = new FormData();
-    form.append('email', email);
-    form.append('subject', subject);
-    // IMPORTANT: passe aussi le nom du fichier explicitement
-    form.append('document', file, file.name);
+  const xhr = new XMLHttpRequest();
+  xhr.open('POST', UPLOAD_URL, true);
 
-    const xhr = new XMLHttpRequest();
-    xhr.open('POST', UPLOAD_URL, true);
-    xhr.responseType = 'json';       // parsage auto si le serveur renvoie JSON
-    // NE PAS fixer 'Content-Type' ici → le navigateur gère la boundary
+  xhr.upload.onprogress = (e)=>{
+    if(e.lengthComputable){
+      const p = Math.round((e.loaded/e.total)*70); // 0→70% pour l’upload
+      setProgress(p);
+    }
+  };
 
-    xhr.upload.onprogress = (e)=>{
-      if(e.lengthComputable){
-        const p = Math.round((e.loaded/e.total)*70); // 0→70% pour l’upload
-        setProgress(p);
+  xhr.onreadystatechange = ()=>{
+    if(xhr.readyState === 4){
+      let data = {};
+      try { data = JSON.parse(xhr.responseText || "{}"); } catch(_) {}
+      if(xhr.status>=200 && xhr.status<300){
+        setProgress(100);
+        upStatus.textContent = "Demande envoyée. Veillez votre email.";
+        upResult.innerHTML = `
+          <div class="ok">✅ Reçu par n8n.</div>
+          ${data.job_id ? `<div class="muted">Job ID: <code>${data.job_id}</code></div>`:''}
+          ${data.docUrl ? `<div>Lien: <a target="_blank" href="${data.docUrl}">${data.docUrl}</a></div>`:''}
+        `;
+        upResult.classList.remove('hidden');
+      }else{
+        upStatus.innerHTML = `<span class="err">${data.message || 'Erreur côté serveur.'}</span>`;
+        setProgress(0);
       }
-    };
+    }
+  };
 
-    xhr.onreadystatechange = ()=>{
-      if(xhr.readyState === 4){
-        const data = xhr.response || {};
-        if(xhr.status>=200 && xhr.status<300){
-          setProgress(100);
-          upStatus.textContent = "Demande envoyée. Veuillez surveiller votre email.";
-          upResult.innerHTML = `
-            <div class="ok">✅ Reçu par n8n (${USE_TEST ? 'test' : 'prod'}).</div>
-            ${data.job_id ? `<div class="muted">Job ID: <code>${data.job_id}</code></div>`:''}
-            ${data.docUrl ? `<div>Lien: <a target="_blank" href="${data.docUrl}">${data.docUrl}</a></div>`:''}
-          `;
-          upResult.classList.remove('hidden');
-        } else {
-          // messages d’erreur plus explicites
-          let msg = 'Erreur serveur.';
-          if (xhr.status === 0) msg = 'Requête bloquée (CORS ou réseau).';
-          if (xhr.status === 413) msg = 'Fichier trop volumineux (413).';
-          if (data && data.message) msg = data.message;
-          upStatus.innerHTML = `<span class="err">${msg}</span>`;
-          setProgress(0);
-        }
-        setBusy(false);
-      }
-    };
+  xhr.onerror = ()=>{ upStatus.innerHTML = `<span class="err">Erreur réseau.</span>`; setProgress(0); };
+  xhr.send(form);
+});
 
-    xhr.onerror = ()=>{
-      upStatus.innerHTML = `<span class="err">Erreur réseau (connexion ou CORS).</span>`;
-      setProgress(0);
-      setBusy(false);
-    };
-
-    xhr.send(form);
-  });
-  </script>
+</script>
 </body>
 </html>
